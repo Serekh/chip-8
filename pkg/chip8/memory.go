@@ -1,0 +1,75 @@
+package chip8
+
+import "log"
+
+const (
+	memorySize uint16 = 0x1000
+	fontSize   uint16 = 0x0050
+)
+
+var (
+	fontSet = [fontSize]uint8{
+		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+		0x20, 0x60, 0x20, 0x20, 0x70, // 1
+		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+		0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+	}
+)
+
+type Memory struct {
+	addresses [memorySize]uint8
+}
+
+func NewMemory() *Memory {
+	memory := &Memory{}
+	memory.loadFont()
+	return memory
+}
+
+func (memory *Memory) loadFont() {
+	for i, value := range fontSet {
+		memory.addresses[i] = value
+	}
+}
+
+func (memory *Memory) Clear() {
+	for i := range memory.addresses {
+		memory.addresses[i] = 0x00
+	}
+
+	memory.loadFont()
+}
+
+func (memory *Memory) Copy(startAddress uint16, data []uint8) {
+	copy(memory.addresses[startAddress:], data)
+}
+
+func (memory *Memory) Read(address uint16) uint8 {
+	if address >= memorySize {
+		log.Fatalf("Memory address was out of range: 0x%04X", address)
+	}
+
+	return memory.addresses[address]
+}
+
+func (memory *Memory) Write(address uint16, value uint8) uint8 {
+	if address >= memorySize {
+		log.Fatalf("Memory address was out of range: 0x%04X", address)
+	}
+
+	oldValue := memory.addresses[address]
+	memory.addresses[address] = value
+	return oldValue
+}
